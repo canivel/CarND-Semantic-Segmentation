@@ -42,3 +42,14 @@ Download the [Kitti Road dataset](http://www.cvlibs.net/datasets/kitti/eval_road
     - define the tensorflow placeholderss for the correct_label and learning_rate
     - we load de VGG layers, and the optimizer and send them to the training function
     - last we Save the inference data using helper.save_inference_samples
+
+some outputs:
+
+-![img](um_000000.png)
+-![img](um_000001.png)
+-![img](um_000003.png)
+-![img](um_000007.png)
+-![img](um_000009.png)
+-![img](um_000013.png)
+-![img](um_000015.png)
+

@@ -7,7 +7,8 @@ import project_tests as tests
 from tqdm import tqdm
 
 # Check TensorFlow Version
-assert LooseVersion(tf.__version__) >= LooseVersion('1.0'), 'Please use TensorFlow version 1.0 or newer.  You are using {}'.format(tf.__version__)
+assert LooseVersion(tf.__version__) >= LooseVersion(
+    '1.0'), 'Please use TensorFlow version 1.0 or newer.  You are using {}'.format(tf.__version__)
 print('TensorFlow Version: {}'.format(tf.__version__))
 
 # Check for a GPU
@@ -39,8 +40,9 @@ def load_vgg(sess, vgg_path):
     layer3_out = graph.get_tensor_by_name(vgg_layer3_out_tensor_name)
     layer4_out = graph.get_tensor_by_name(vgg_layer4_out_tensor_name)
     layer7_out = graph.get_tensor_by_name(vgg_layer7_out_tensor_name)
-    
+
     return image_input, keep_prob, layer3_out, layer4_out, layer7_out
+
 
 tests.test_load_vgg(load_vgg, tf)
 
@@ -54,41 +56,49 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
     :param num_classes: Number of classes to classify
     :return: The Tensor for the last layer of output
     """
-    #1x1 conv
+    # 1x1 conv
     conv_11 = tf.layers.conv2d(vgg_layer7_out, num_classes, 1,
                                padding='same',
-                               kernel_regularizer = tf.contrib.layers.l2_regularizer(1e-3))
-    #upsampling by 2
+                               kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3),
+                               kernel_initializer=tf.truncated_normal_initializer(stddev=0.01))
+    # upsampling by 2
     l7out = tf.layers.conv2d_transpose(conv_11, num_classes, 4, 2,
-                                        padding ='same',
-                                        kernel_regularizer = tf.contrib.layers.l2_regularizer(1e-3))
+                                       padding='same',
+                                       kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3),
+                                       kernel_initializer=tf.truncated_normal_initializer(stddev=0.01))
 
-    #check the shapes
+    # check the shapes
 
     l4in = tf.layers.conv2d(vgg_layer4_out, num_classes, 1,
-                                   padding = 'same',
-                                   kernel_regularizer = tf.contrib.layers.l2_regularizer(1e-3))
+                            padding='same',
+                            kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3),
+                            kernel_initializer=tf.truncated_normal_initializer(stddev=0.01))
 
     # skip connection (element-wise addition)
     l4out = tf.add(l7out, l4in)
 
     # upsampling by 2
     l3in1 = tf.layers.conv2d_transpose(l4out, num_classes, 4, 2,
-                                        padding = 'same',
-                                        kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+                                       padding='same',
+                                       kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3),
+                                       kernel_initializer=tf.truncated_normal_initializer(stddev=0.01))
 
     l3in2 = tf.layers.conv2d(vgg_layer3_out, num_classes, 1,
-                                   padding='same',
-                                   kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+                             padding='same',
+                             kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3),
+                             kernel_initializer=tf.truncated_normal_initializer(stddev=0.01))
 
     # skip connection (element-wise addition)
     l3_out = tf.add(l3in1, l3in2)
 
     # upsample
     ll = tf.layers.conv2d_transpose(l3_out, num_classes, 16, 8,
-                                               padding='same',
-                                               kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+                                    padding='same',
+                                    kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3),
+                                    kernel_initializer=tf.truncated_normal_initializer(stddev=0.01))
     return ll
+
+
 tests.test_layers(layers)
 
 
@@ -108,6 +118,7 @@ def optimize(nn_last_layer, correct_label, learning_rate, num_classes):
     train_op = optimizer.minimize(cross_entropy_loss)
 
     return logits, train_op, cross_entropy_loss
+
 
 tests.test_optimize(optimize)
 
@@ -138,6 +149,7 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
             print("LOSS >>>> {:.3f}".format(loss))
     pass
 
+
 tests.test_train_nn(train_nn)
 
 
@@ -164,8 +176,8 @@ def run():
         # OPTIONAL: Augment Images for better results
         #  https://datascience.stackexchange.com/questions/5224/how-to-prepare-augment-images-for-neural-network
 
-        epochs = 10
-        batch_size = 2
+        epochs = 50
+        batch_size = 5
 
         correct_label = tf.placeholder(tf.int32, [None, None, None, num_classes], name='correct_label')
         learning_rate = tf.placeholder(tf.float32, name='learning_rate')
